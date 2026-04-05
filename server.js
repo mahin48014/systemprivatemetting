@@ -1,108 +1,90 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-
-const PORT = process.env.PORT || 3000;
-
-app.use(express.static("public"));
-
-const ADMIN_NAME = "SystemAdmin";
-const ADMIN_PASSWORD = "system480";
-
-let history = [];
-let bannedUsers = new Set();
-
-function getBadge(name, isAdmin) {
-  if (isAdmin) return { text: "👑 ADMIN", color: "red" };
-  if (name.startsWith("VIP")) return { text: "💎 VIP", color: "blue" };
-  if (name === "SimpleChat Official") return { text: "✔️ OFFICIAL", color: "green" };
-  return { text: "👤 USER", color: "gray" };
-}
-
-function sendUserList() {
-  const users = [];
-  for (let [id, s] of io.sockets.sockets) {
-    users.push(s.data.name);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
   }
-  io.emit("userList", users);
-}
+});
 
-io.on("connection", (socket) => {
+// Store active users
+const users = new Map(); // socketId -> { name, isAdmin }
+let adminSocketId = null;
 
-  socket.on("join", ({ name, password }) => {
-    if (bannedUsers.has(name)) {
-      socket.emit("banned");
-      return;
+io.on('connection', (socket) => {
+  console.log('New user connected:', socket.id);
+  
+  socket.on('user-join', (data) => {
+    const { username, isAdmin } = data;
+    
+    users.set(socket.id, { name: username, isAdmin, id: socket.id });
+    
+    if (isAdmin) {
+      adminSocketId = socket.id;
     }
-
-    socket.data.name = name;
-
-    if (name === ADMIN_NAME && password === ADMIN_PASSWORD) {
-      socket.data.isAdmin = true;
-    } else {
-      socket.data.isAdmin = false;
+    
+    // Broadcast updated user list
+    const userList = Array.from(users.values());
+    io.emit('user-list-update', userList);
+    
+    // Send system message
+    io.emit('system-message', `${username} joined the room`);
+    
+    // Send join confirmation
+    socket.emit('join-success', { username, isAdmin });
+  });
+  
+  socket.on('send-message', (data) => {
+    const user = users.get(socket.id);
+    if (user) {
+      io.emit('new-message', {
+        username: user.name,
+        text: data.text,
+        isAdminMsg: user.isAdmin || false,
+        timestamp: new Date().toISOString()
+      });
     }
-
-    socket.emit("joined", {
-      name,
-      isAdmin: socket.data.isAdmin
-    });
-
-    socket.emit("history", history);
-    sendUserList();
   });
-
-  socket.on("message", (msg) => {
-    if (!socket.data.name) return;
-
-    const name = socket.data.name;
-    const isAdmin = socket.data.isAdmin;
-
-    const badge = getBadge(name, isAdmin);
-
-    const message = {
-      id: Date.now() + Math.random(),
-      name,
-      text: msg,
-      badge,
-      isAdmin
-    };
-
-    history.push(message);
-    if (history.length > 100) history.shift();
-
-    io.emit("message", message);
-  });
-
-  socket.on("deleteMessage", (id) => {
-    if (!socket.data.isAdmin) return;
-
-    history = history.filter(m => m.id != id);
-    io.emit("messageDeleted", id);
-  });
-
-  socket.on("banUser", (target) => {
-    if (!socket.data.isAdmin) return;
-
-    bannedUsers.add(target);
-
-    for (let [id, s] of io.sockets.sockets) {
-      if (s.data.name === target) {
-        s.emit("banned");
-        s.disconnect();
+  
+  socket.on('kick-user', (data) => {
+    const admin = users.get(socket.id);
+    if (admin && admin.isAdmin) {
+      const targetSocket = io.sockets.sockets.get(data.targetId);
+      if (targetSocket) {
+        targetSocket.emit('kicked');
+        targetSocket.disconnect();
+        
+        const targetUser = users.get(data.targetId);
+        if (targetUser) {
+          users.delete(data.targetId);
+          io.emit('system-message', `${targetUser.name} was kicked by admin`);
+          const updatedList = Array.from(users.values());
+          io.emit('user-list-update', updatedList);
+        }
       }
     }
-
-    sendUserList();
   });
-
-  socket.on("disconnect", () => {
-    sendUserList();
+  
+  socket.on('disconnect', () => {
+    const user = users.get(socket.id);
+    if (user) {
+      users.delete(socket.id);
+      io.emit('system-message', `${user.name} left the room`);
+      const userList = Array.from(users.values());
+      io.emit('user-list-update', userList);
+      
+      if (adminSocketId === socket.id) {
+        adminSocketId = null;
+      }
+    }
   });
 });
 
-server.listen(PORT, () => console.log("Server running on " + PORT));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Ultra Chat Server running on port ${PORT}`);
+});
