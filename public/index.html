@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Private Metting Room</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login">
+  <input id="name" placeholder="Username">
+  <input id="pass" placeholder="Password (admin only)">
+  <button onclick="join()">Join</button>
+</div>
+
+<div id="chat" style="display:none;">
+  <div id="messages"></div>
+
+  <input id="msg" placeholder="Type message">
+  <button onclick="sendMsg()">Send</button>
+</div>
+
+<div id="adminPanel" style="display:none;">
+  <h3>Admin Panel</h3>
+  <div id="userList"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
