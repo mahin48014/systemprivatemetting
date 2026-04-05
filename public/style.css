@@ -1,3 +1,15 @@
-body { font-family: Arial; background: #111; color: #fff; }
-#messages div { margin: 5px; padding: 5px; background: #222; border-radius: 5px; }
-button { margin-left: 5px; }
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);height:100vh}
+.app{max-width:500px;margin:auto;height:100vh;display:flex;flex-direction:column}
+.login-box{margin:auto;width:90%;background:rgba(255,255,255,0.05);padding:20px;border-radius:20px;text-align:center}
+.login-box input{width:100%;margin:10px 0;padding:12px;border-radius:10px;border:none}
+.login-box button{width:100%;padding:12px;border:none;border-radius:10px;background:#00c6ff;color:#fff}
+.chat-box{display:flex;flex-direction:column;height:100%}
+.header{padding:15px;background:rgba(0,0,0,0.3);text-align:center}
+.messages{flex:1;overflow-y:auto;padding:10px}
+.msg{margin:8px 0;padding:10px;border-radius:15px;background:rgba(255,255,255,0.1)}
+.input-box{display:flex;padding:10px;background:rgba(0,0,0,0.2)}
+.input-box input{flex:1;padding:10px;border-radius:20px;border:none}
+.input-box button{margin-left:10px;border:none;border-radius:50%;width:45px;height:45px;background:#00c6ff;color:#fff}
+.admin{position:fixed;bottom:0;width:100%;max-width:500px;background:#111;padding:10px}
+.hidden{display:none}
