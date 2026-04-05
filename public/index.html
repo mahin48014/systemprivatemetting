@@ -2,39 +2,145 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ULTRA CHAT — Private Nexus</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ULTRA CHAT — Global Room</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Same ultra-modern CSS from previous version - copy the complete style.css here */
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:radial-gradient(circle at 10% 30%,#0A0F1E,#03050B);height:100vh;overflow:hidden;position:relative;}
+    body::before{content:"";position:absolute;width:70vmax;height:70vmax;background:radial-gradient(circle,rgba(0,198,255,0.08) 0%,rgba(0,0,0,0) 70%);border-radius:50%;top:-20%;left:-20%;pointer-events:none;z-index:0;}
+    body::after{content:"";position:absolute;width:60vmax;height:60vmax;background:radial-gradient(circle,rgba(111,66,255,0.08) 0%,rgba(0,0,0,0) 70%);border-radius:50%;bottom:-30%;right:-20%;pointer-events:none;z-index:0;}
+    .app{max-width:550px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;z-index:2;}
+    .login-box{margin:auto;width:90%;background:rgba(12,18,28,0.75);backdrop-filter:blur(18px);border-radius:48px;padding:32px 24px;text-align:center;border:1px solid rgba(0,198,255,0.3);box-shadow:0 25px 45px rgba(0,0,0,0.5);animation:floatIn 0.6s cubic-bezier(0.2,0.9,0.4,1.1);}
+    @keyframes floatIn{from{opacity:0;transform:translateY(30px) scale(0.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .login-box h2{font-weight:700;background:linear-gradient(135deg,#E0F2FE,#7DD3FC);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:1.9rem;margin-bottom:20px;}
+    .login-box input{width:100%;margin:12px 0;padding:14px 20px;border-radius:40px;border:none;background:rgba(20,28,40,0.9);font-size:1rem;color:#F0F4FF;outline:none;border:1px solid rgba(255,255,255,0.05);}
+    .login-box input:focus{border-color:#00c6ff;box-shadow:0 0 12px rgba(0,198,255,0.4);}
+    .login-box button{width:100%;padding:14px;border:none;border-radius:40px;background:linear-gradient(100deg,#00c6ff,#0072ff);color:white;font-weight:700;font-size:1.1rem;margin-top:12px;cursor:pointer;transition:0.2s;box-shadow:0 8px 20px rgba(0,114,255,0.3);}
+    .login-box button:hover{transform:scale(0.98);}
+    .chat-box{display:flex;flex-direction:column;height:100%;background:rgba(5,8,18,0.65);backdrop-filter:blur(12px);overflow:hidden;}
+    .header{padding:18px 20px;background:rgba(0,0,0,0.55);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,198,255,0.3);}
+    .header span{background:linear-gradient(120deg,#9cd4ff,#00c6ff);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;font-size:1.4rem;}
+    .badge-room{background:rgba(0,198,255,0.2);padding:6px 12px;border-radius:40px;font-size:0.7rem;}
+    .messages{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px;}
+    .messages::-webkit-scrollbar{width:5px;}
+    .messages::-webkit-scrollbar-track{background:rgba(255,255,255,0.05);border-radius:10px;}
+    .messages::-webkit-scrollbar-thumb{background:#00c6ff;border-radius:10px;}
+    .msg{max-width:85%;padding:10px 18px;border-radius:28px;background:rgba(20,28,40,0.85);color:#EFF3FF;word-wrap:break-word;animation:fadeSlideUp 0.2s ease;}
+    @keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    .msg strong{color:#7dd3fc;margin-right:6px;}
+    .msg.admin-msg{background:linear-gradient(105deg,rgba(0,114,255,0.25),rgba(0,198,255,0.2));border-left:3px solid #00c6ff;}
+    .msg.system{background:rgba(0,0,0,0.4);text-align:center;font-style:italic;font-size:0.8rem;color:#9ca3af;}
+    .input-box{display:flex;padding:16px 18px;background:rgba(0,0,0,0.5);backdrop-filter:blur(12px);gap:12px;}
+    .input-box input{flex:1;padding:14px 22px;border-radius:50px;background:rgba(15,25,40,0.9);color:white;border:1px solid rgba(0,198,255,0.2);outline:none;}
+    .input-box input:focus{border-color:#00c6ff;}
+    .input-box button{background:linear-gradient(145deg,#00c6ff,#0099ff);border:none;border-radius:60px;width:52px;height:52px;color:white;cursor:pointer;}
+    .admin{position:fixed;bottom:20px;right:20px;max-width:320px;background:rgba(8,12,24,0.95);backdrop-filter:blur(20px);border-radius:32px;padding:16px 18px;border:1px solid rgba(0,198,255,0.4);z-index:20;}
+    .admin h3{font-size:1rem;color:#b0e0ff;margin-bottom:12px;border-bottom:1px dashed rgba(0,198,255,0.3);padding-bottom:8px;}
+    #userList{display:flex;flex-direction:column;gap:8px;max-height:180px;overflow-y:auto;}
+    .user-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:40px;display:flex;justify-content:space-between;align-items:center;}
+    .kick-btn{background:rgba(255,70,70,0.2);border:none;color:#ff8a8a;border-radius:30px;padding:4px 10px;cursor:pointer;}
+    .hidden{display:none;}
+  </style>
 </head>
 <body>
-
 <div class="app">
-  <!-- LOGIN VIEW -->
   <div id="login" class="login-box">
     <h2><i class="fas fa-comet"></i> ULTRA CHAT</h2>
-    <input type="text" id="name" placeholder="Enter username" autocomplete="off">
+    <input type="text" id="name" placeholder="Username">
     <input type="password" id="pass" placeholder="Admin password (optional)">
-    <button onclick="join()"><i class="fas fa-arrow-right-to-bracket"></i> Enter Nexus</button>
-    <div class="login-hint">✨ private encrypted room vibe | Admin pass: <strong>ultraadmin2025</strong></div>
+    <button onclick="join()"><i class="fas fa-arrow-right-to-bracket"></i> Enter Global Chat</button>
+    <div class="login-hint">✨ Works across all devices | Admin: ultraadmin2025</div>
   </div>
-
-  <!-- CHAT INTERFACE -->
   <div id="chat" class="chat-box hidden">
-    <div class="header">
-      <span><i class="fas fa-lock"></i> Private Chamber</span>
-      <div class="badge-room" id="onlineBadge">🌐 0 online</div>
-    </div>
+    <div class="header"><span><i class="fas fa-globe"></i> Global Room</span><div class="badge-room" id="onlineBadge">🌐 0 online</div></div>
     <div id="messages" class="messages"></div>
-    <div class="input-box">
-      <input type="text" id="msg" placeholder="Type a cosmic message..." autocomplete="off">
-      <button onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
-    </div>
+    <div class="input-box"><input type="text" id="msg" placeholder="Type message..."><button onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button></div>
   </div>
+  <div id="adminPanel" class="admin hidden"><h3><i class="fas fa-crown"></i> Admin Panel</h3><div id="userList"></div></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let currentUser = null;
+  let isAdmin = false;
+  let users = [];
 
-  <!-- ADMIN DASHBOARD (floating) -->
-  <div id="adminPanel" class="admin hidden">
+  function addMessage(username, text, isAdminMsg = false, isSystem = false) {
+    const msgsDiv = document.getElementById('messages');
+    const msgDiv = document.createElement('div');
+    if (isSystem) {
+      msgDiv.className = 'msg system';
+      msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${text}`;
+    } else {
+      msgDiv.className = 'msg';
+      if (isAdminMsg) msgDiv.classList.add('admin-msg');
+      msgDiv.innerHTML = `<strong>${escapeHtml(username)}${isAdminMsg ? ' 👑' : ''}</strong> ${escapeHtml(text)}`;
+    }
+    msgsDiv.appendChild(msgDiv);
+    msgsDiv.scrollTop = msgsDiv.scrollHeight;
+  }
+
+  function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
+
+  function updateUserList(userList) {
+    users = userList;
+    const container = document.getElementById('userList');
+    if (!container) return;
+    document.getElementById('onlineBadge').innerText = `🌐 ${users.length} online`;
+    if (!isAdmin) return;
+    container.innerHTML = '';
+    users.forEach(user => {
+      const div = document.createElement('div');
+      div.className = 'user-item';
+      div.innerHTML = `<span>${escapeHtml(user.name)} ${user.isAdmin ? '👑' : ''}</span>`;
+      if (isAdmin && user.name !== currentUser) {
+        const btn = document.createElement('button');
+        btn.textContent = 'Kick';
+        btn.className = 'kick-btn';
+        btn.onclick = () => socket.emit('kick-user', { targetId: user.id });
+        div.appendChild(btn);
+      }
+      container.appendChild(div);
+    });
+  }
+
+  function join() {
+    const username = document.getElementById('name').value.trim();
+    const password = document.getElementById('pass').value.trim();
+    if (!username) { alert("Enter username"); return; }
+    currentUser = username;
+    isAdmin = (password === "ultraadmin2025");
+    socket.emit('user-join', { username, isAdmin });
+  }
+
+  socket.on('join-success', (data) => {
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('chat').classList.remove('hidden');
+    if (isAdmin) document.getElementById('adminPanel').classList.remove('hidden');
+    addMessage('System', `Welcome ${currentUser}!`, false, true);
+  });
+
+  socket.on('user-list-update', (userList) => updateUserList(userList));
+  socket.on('system-message', (msg) => addMessage('System', msg, false, true));
+  socket.on('new-message', (data) => addMessage(data.username, data.text, data.isAdminMsg));
+  socket.on('kicked', () => { alert("You were kicked!"); location.reload(); });
+
+  function sendMsg() {
+    const input = document.getElementById('msg');
+    const text = input.value.trim();
+    if (!text) return;
+    socket.emit('send-message', { text });
+    input.value = '';
+  }
+
+  document.getElementById('msg')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMsg(); });
+  window.join = join; window.sendMsg = sendMsg;
+</script>
+</body>
+</html>  <div id="adminPanel" class="admin hidden">
     <h3><i class="fas fa-crown"></i> Admin core</h3>
     <div id="userList">— loading users —</div>
     <div class="admin-footer"><i class="fas fa-gavel"></i> click kick to remove</div>
